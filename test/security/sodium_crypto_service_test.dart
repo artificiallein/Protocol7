@@ -89,10 +89,7 @@ void main() {
     );
     final tamperedCiphertext = envelope.ciphertext;
     tamperedCiphertext[tamperedCiphertext.length - 1] ^= 1;
-    final tampered = _copyEnvelope(
-      envelope,
-      ciphertext: tamperedCiphertext,
-    );
+    final tampered = _copyEnvelope(envelope, ciphertext: tamperedCiphertext);
 
     await expectLater(
       cryptoService.decrypt(envelope: tampered, recipient: bob),

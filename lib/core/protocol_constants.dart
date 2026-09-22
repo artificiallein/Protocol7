@@ -1,8 +1,7 @@
 abstract final class ProtocolConstants {
   static const int version = 1;
   static const String label = 'P7/1';
-  static const String cryptoSuite =
-    'P7/1-libsodium-sealedbox-ed25519-blake2b';
+  static const String cryptoSuite = 'P7/1-libsodium-sealedbox-ed25519-blake2b';
 
   static const int identityIdBytes = 16;
   static const int messageIdBytes = 16;

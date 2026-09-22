@@ -110,7 +110,9 @@ final class SodiumCryptoService implements CryptoService {
 
     if (plaintext.length > ProtocolConstants.maxMessageBytes) {
       plaintext.fillRange(0, plaintext.length, 0);
-      throw const CryptoInputException('Decrypted message exceeds P7/1 limits.');
+      throw const CryptoInputException(
+        'Decrypted message exceeds P7/1 limits.',
+      );
     }
 
     final signatureInput = _signatureInput(
@@ -138,7 +140,10 @@ final class SodiumCryptoService implements CryptoService {
   }) async {
     final secretKey = SecureKey.fromList(_sodium, identity.signingPrivateKey);
     try {
-      return _sodium.crypto.sign.detached(message: message, secretKey: secretKey);
+      return _sodium.crypto.sign.detached(
+        message: message,
+        secretKey: secretKey,
+      );
     } finally {
       secretKey.dispose();
     }
@@ -246,9 +251,8 @@ final class SodiumCryptoService implements CryptoService {
   @override
   String generateMessageId() => _randomId(ProtocolConstants.messageIdBytes);
 
-  String _randomId(int byteLength) => base64Url
-      .encode(_sodium.randombytes.buf(byteLength))
-      .replaceAll('=', '');
+  String _randomId(int byteLength) =>
+      base64Url.encode(_sodium.randombytes.buf(byteLength)).replaceAll('=', '');
 
   void _validateEnvelopeMetadata(EncryptedEnvelope envelope) {
     if (envelope.protocolVersion != ProtocolConstants.version) {

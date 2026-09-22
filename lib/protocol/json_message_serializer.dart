@@ -76,11 +76,7 @@ final class JsonMessageSerializer implements MessageSerializer {
         protocolVersion: version,
         messageId: _string(decoded, 'messageId', maxLength: 128),
         conversationId: _string(decoded, 'conversationId', maxLength: 128),
-        senderIdentityId: _string(
-          decoded,
-          'senderIdentityId',
-          maxLength: 128,
-        ),
+        senderIdentityId: _string(decoded, 'senderIdentityId', maxLength: 128),
         createdAt: DateTime.parse(
           _string(decoded, 'createdAt', maxLength: 64),
         ).toUtc(),

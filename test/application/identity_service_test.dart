@@ -30,7 +30,10 @@ void main() {
 
     expect(await keyStorage.hasIdentity(), isTrue);
     expect(created.identityId, isNot(contains('@')));
-    expect(created.fingerprint, matches(RegExp(r'^[0-9A-F]{4}( [0-9A-F]{4}){7}$')));
+    expect(
+      created.fingerprint,
+      matches(RegExp(r'^[0-9A-F]{4}( [0-9A-F]{4}){7}$')),
+    );
 
     final loaded = await identityService.loadIdentity();
     addTearDown(loaded.destroy);

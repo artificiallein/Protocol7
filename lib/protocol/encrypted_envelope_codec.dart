@@ -154,8 +154,7 @@ final class EncryptedEnvelopeCodec {
       maxLength: ((maxDecodedLength + 2) ~/ 3) * 4,
     );
     final bytes = base64Url.decode(encoded);
-    if (bytes.length != maxDecodedLength &&
-        key != 'ciphertext') {
+    if (bytes.length != maxDecodedLength && key != 'ciphertext') {
       throw ProtocolFormatException('Invalid $key length.');
     }
     if (bytes.isEmpty || bytes.length > maxDecodedLength) {
