@@ -17,6 +17,21 @@ final class Contact {
   final String? identityId;
   final String? currentFingerprint;
   final KeyVerificationStatus verificationStatus;
+
+  Contact copyWith({
+    String? displayName,
+    String? transportAddress,
+    String? identityId,
+    String? currentFingerprint,
+    KeyVerificationStatus? verificationStatus,
+  }) => Contact(
+    id: id,
+    displayName: displayName ?? this.displayName,
+    transportAddress: transportAddress ?? this.transportAddress,
+    identityId: identityId ?? this.identityId,
+    currentFingerprint: currentFingerprint ?? this.currentFingerprint,
+    verificationStatus: verificationStatus ?? this.verificationStatus,
+  );
 }
 
 final class Conversation {
@@ -43,18 +58,38 @@ final class KnownKey {
   final KeyVerificationStatus verificationStatus;
   final DateTime? revokedAt;
   final String? previousFingerprint;
+
+  KnownKey copyWith({
+    DateTime? lastSeenAt,
+    KeyVerificationStatus? verificationStatus,
+    DateTime? revokedAt,
+    bool clearRevokedAt = false,
+    String? previousFingerprint,
+  }) => KnownKey(
+    contactId: contactId,
+    publicIdentity: publicIdentity,
+    firstSeenAt: firstSeenAt,
+    lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    verificationStatus: verificationStatus ?? this.verificationStatus,
+    revokedAt: clearRevokedAt ? null : revokedAt ?? this.revokedAt,
+    previousFingerprint: previousFingerprint ?? this.previousFingerprint,
+  );
 }
 
 final class SecurityEvent {
   const SecurityEvent({
     required this.type,
     required this.createdAt,
-    required this.details,
+    required this.contactId,
+    this.previousFingerprint,
+    this.currentFingerprint,
   });
 
   final SecurityEventType type;
   final DateTime createdAt;
-  final String details;
+  final String contactId;
+  final String? previousFingerprint;
+  final String? currentFingerprint;
 }
 
 enum TransportSecurity { implicitTls, startTls }

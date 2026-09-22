@@ -12,4 +12,12 @@ enum MessageStatus {
   failed,
 }
 
-enum SecurityEventType { keyChanged, invalidSignature, replayDetected }
+enum SecurityEventType {
+  newKeyDetected,
+  keyVerified,
+  keyChanged,
+  invalidSignature,
+  replayDetected,
+  decryptionFailed,
+  unsupportedProtocolVersion,
+}

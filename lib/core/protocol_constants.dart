@@ -17,4 +17,6 @@ abstract final class ProtocolConstants {
   static const int maxEnvelopeBytes = 256 * 1024;
   static const int maxBodyCharacters = 32 * 1024;
   static const int maxAttachmentCount = 8;
+  static const int maxQrPayloadBytes = 4 * 1024;
+  static const int maxTransportAddressCharacters = 320;
 }

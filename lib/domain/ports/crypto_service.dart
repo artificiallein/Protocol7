@@ -36,5 +36,6 @@ abstract interface class CryptoService {
   });
 
   Future<bool> validateIdentity(UserIdentity identity);
+  String generateContactId();
   String generateMessageId();
 }

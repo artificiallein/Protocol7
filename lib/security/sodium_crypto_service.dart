@@ -249,6 +249,9 @@ final class SodiumCryptoService implements CryptoService {
   }
 
   @override
+  String generateContactId() => _randomId(ProtocolConstants.identityIdBytes);
+
+  @override
   String generateMessageId() => _randomId(ProtocolConstants.messageIdBytes);
 
   String _randomId(int byteLength) =>
