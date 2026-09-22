@@ -1,8 +1,8 @@
-# Threat model (Phase 1 draft)
+# Threat model (experimental Milestones 2–5)
 
 ## Scope and assets
 
-The future client handles message and attachment plaintext, attachment names and MIME types, identity private keys, contact trust decisions, and email credentials. The protected path is local plaintext → local encryption → SMTP/IMAP as untrusted byte transport → local authenticated decryption. This document states requirements; Phase 1 has no implementation and offers no protection.
+The future client handles message and attachment plaintext, attachment names and MIME types, identity private keys, contact trust decisions, and email credentials. The protected path is local plaintext → local encryption → SMTP/IMAP as untrusted byte transport → local authenticated decryption. Identity, envelope cryptography, TOFU/QR trust logic and a hostile fake transport are implemented and tested, but the application is not a released secure messenger.
 
 ## Adversaries and capabilities
 
@@ -30,4 +30,4 @@ Email addresses, headers, correspondents, provider visible IP, mail routing, sen
 
 ## Acceptance tests for later phases
 
-Cross-recipient decryption fails; ciphertext modification and wrong signatures fail closed; changed keys require explicit user action; repeated message IDs are rejected after restart; unknown versions and oversized or malformed inputs are rejected; SMTP capture contains no message text, filename, file bytes, or credentials; offline and dropped messages do not get false delivery status.
+Implemented tests cover cross-recipient decryption failure, ciphertext/signature modification, strict parsing, TOFU key changes, QR mismatch, and fake delay/drop/duplicate/modify behavior. Later acceptance tests must prove repeated message IDs are rejected after restart; SMTP capture contains no message text, filename, file bytes, or credentials; and offline or dropped messages never receive a false delivery status.

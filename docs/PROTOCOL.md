@@ -1,6 +1,6 @@
 # Protocol P7/1 (experimental)
 
-`P7/1` uses integer `protocolVersion: 1`. Receivers reject every unknown version and crypto suite without guessing or fallback. This milestone implements local serialization and encrypted-envelope tests only; no email transport exists.
+`P7/1` uses integer `protocolVersion: 1`. Receivers reject every unknown version and crypto suite without guessing or fallback. Milestones 2–5 implement local serialization, encrypted envelopes, contact trust and a test-only transport; no email transport exists.
 
 ## Inner message JSON
 
@@ -36,4 +36,10 @@ The envelope is limited to 256 KiB. Decoders validate types, string lengths, bas
 
 Parse bounded envelope → validate version/suite/key sizes → sealed-box open with the local recipient key → verify the signature and all bindings → deserialize bounded message → verify that inner message and outer routing identifiers agree in the future receive use case → atomically reject replay → store/display.
 
-Milestone 3 implements through signature verification and deserialization. Contact pinning, the orchestration checks between inner and outer IDs, persistent replay rejection, email MIME (`application/x-protocol7`) and transport are later milestones.
+Milestone 3 implements through signature verification and deserialization. Contact pinning and explicit key-change verification are implemented separately in Milestone 4. The orchestration checks between inner and outer IDs, persistent replay rejection and email MIME (`application/x-protocol7`) remain later milestones. `FakeTransport` in Milestone 5 carries the same opaque envelope type but is not a P7 wire encoding or production carrier.
+
+## QR key verification payload
+
+The scanner payload is bounded to 4 KiB of UTF-8 and is a strict JSON object with exactly these fields: `protocol`, `version`, `identityId`, `signingPublicKey`, `encryptionPublicKey`, `fingerprint`, `createdAt`, and `cryptoVersion`. `protocol` is `Protocol 7`; both version fields are `1`; keys are padded base64url and the date is UTC ISO-8601. Unknown, missing, oversized, malformed or wrong-version fields are rejected. The receiver recomputes the fingerprint over both decoded keys before allowing verification.
+
+The QR payload is intended for comparison over an independent trusted channel. It is not encrypted and should contain public identity material only.

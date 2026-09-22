@@ -24,7 +24,15 @@ The fingerprint is a 16-byte unkeyed libsodium BLAKE2b (`crypto_generichash`) ou
 3. 32-byte Ed25519 public key;
 4. 32-byte Curve25519 public key.
 
-It is rendered as eight groups of four uppercase hexadecimal characters. Fingerprints authenticate nothing until compared over an independent trusted channel. TOFU and contact verification remain Milestone 4.
+It is rendered as eight groups of four uppercase hexadecimal characters. Fingerprints authenticate nothing until compared over an independent trusted channel.
+
+## Contact trust and key changes
+
+Milestone 4 implements application-layer TOFU. A contact has a random local ID independent of its transport address. The first structurally valid public identity is pinned as `unverified`; seeing the exact same identity only updates `lastSeenAt`. A different fingerprint is stored as a `changed` candidate with the previous fingerprint, raises `KEY_CHANGED`, and leaves the active fingerprint and identity untouched.
+
+QR verification serializes the protocol/version, identity ID, both public keys, fingerprint and creation timestamp in a bounded, strict JSON payload. The fingerprint is recomputed from the scanned keys before any trust change. Scanning the active key marks it verified; scanning an already observed changed candidate explicitly promotes it and revokes, but preserves, the previous key record. An unrelated or malformed QR payload fails closed. Rendering and camera scanning UI are deferred to the UI milestone.
+
+The included trust-store implementation is deliberately in-memory for tests and development. It demonstrates repository boundaries and history semantics but must not be used as production TOFU persistence: restart-safe local database storage and rollback considerations remain required before release.
 
 ## Private-key storage
 
@@ -47,7 +55,7 @@ Any changed clear envelope binding makes signature verification fail. `crypto_bo
 
 - A server sees the sender public identity, fingerprint, detached signature, message ID, suite, ciphertext length and all normal email metadata. It does not see message JSON.
 - Static recipient-key compromise can decrypt previously recorded sealed boxes; P7/1 does not claim forward secrecy or post-compromise security.
-- Replay persistence is not part of Milestone 3. A random, signed message ID is present for the later atomic replay index.
+- Replay persistence is not part of Milestones 2–5. A random, signed message ID is present for the later atomic replay index.
 - Attachments, streaming, backup/restore and key rotation are not implemented.
 - Web requires an explicitly bundled `sodium.js`, HTTPS secure storage and a separate security review. The current web build is only a compile check.
 - The protocol has no independent audit or interoperability vectors yet and must not be marketed as production-ready.
