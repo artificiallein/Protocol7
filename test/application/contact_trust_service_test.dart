@@ -42,88 +42,100 @@ void main() {
     mallory.destroy();
   });
 
-  test('first key is pinned as unverified and repeated key is accepted', () async {
-    final contact = await service.addContact(
-      displayName: 'Bob',
-      transportAddress: 'bob@example.test',
-    );
-    expect(contact.id, isNot(contains('@')));
+  test(
+    'first key is pinned as unverified and repeated key is accepted',
+    () async {
+      final contact = await service.addContact(
+        displayName: 'Bob',
+        transportAddress: 'bob@example.test',
+      );
+      expect(contact.id, isNot(contains('@')));
 
-    final first = await service.observeIdentity(
-      contactId: contact.id,
-      announcedIdentity: bobA.publicIdentity,
-      seenAt: DateTime.utc(2026, 1, 1),
-    );
-    final repeated = await service.observeIdentity(
-      contactId: contact.id,
-      announcedIdentity: bobA.publicIdentity,
-      seenAt: DateTime.utc(2026, 1, 2),
-    );
+      final first = await service.observeIdentity(
+        contactId: contact.id,
+        announcedIdentity: bobA.publicIdentity,
+        seenAt: DateTime.utc(2026, 1, 1),
+      );
+      final repeated = await service.observeIdentity(
+        contactId: contact.id,
+        announcedIdentity: bobA.publicIdentity,
+        seenAt: DateTime.utc(2026, 1, 2),
+      );
 
-    expect(first.kind, TrustObservationKind.firstUse);
-    expect(repeated.kind, TrustObservationKind.knownKey);
-    expect(first.contact.currentFingerprint, bobA.fingerprint);
-    expect(first.contact.verificationStatus, KeyVerificationStatus.unverified);
-    final keys = await store.listKnownKeys(contact.id);
-    expect(keys, hasLength(1));
-    expect(keys.single.lastSeenAt, DateTime.utc(2026, 1, 2));
-    final events = await store.listSecurityEvents(contactId: contact.id);
-    expect(events, hasLength(1));
-    expect(events.single.type, SecurityEventType.newKeyDetected);
-  });
+      expect(first.kind, TrustObservationKind.firstUse);
+      expect(repeated.kind, TrustObservationKind.knownKey);
+      expect(first.contact.currentFingerprint, bobA.fingerprint);
+      expect(
+        first.contact.verificationStatus,
+        KeyVerificationStatus.unverified,
+      );
+      final keys = await store.listKnownKeys(contact.id);
+      expect(keys, hasLength(1));
+      expect(keys.single.lastSeenAt, DateTime.utc(2026, 1, 2));
+      final events = await store.listSecurityEvents(contactId: contact.id);
+      expect(events, hasLength(1));
+      expect(events.single.type, SecurityEventType.newKeyDetected);
+    },
+  );
 
-  test('a changed key is retained but never silently replaces the pin', () async {
-    final contact = await _contactWithPinnedBob(service, bobA.publicIdentity);
+  test(
+    'a changed key is retained but never silently replaces the pin',
+    () async {
+      final contact = await _contactWithPinnedBob(service, bobA.publicIdentity);
 
-    final result = await service.observeIdentity(
-      contactId: contact.id,
-      announcedIdentity: bobB.publicIdentity,
-      seenAt: DateTime.utc(2026, 2, 1),
-    );
+      final result = await service.observeIdentity(
+        contactId: contact.id,
+        announcedIdentity: bobB.publicIdentity,
+        seenAt: DateTime.utc(2026, 2, 1),
+      );
 
-    expect(result.kind, TrustObservationKind.keyChanged);
-    expect(result.contact.currentFingerprint, bobA.fingerprint);
-    expect(result.contact.identityId, bobA.identityId);
-    expect(result.contact.verificationStatus, KeyVerificationStatus.changed);
-    final keys = await store.listKnownKeys(contact.id);
-    expect(keys, hasLength(2));
-    final candidate = keys.singleWhere(
-      (key) => key.publicIdentity.fingerprint == bobB.fingerprint,
-    );
-    expect(candidate.verificationStatus, KeyVerificationStatus.changed);
-    expect(candidate.previousFingerprint, bobA.fingerprint);
-    final events = await store.listSecurityEvents(contactId: contact.id);
-    expect(events.last.type, SecurityEventType.keyChanged);
-    expect(events.last.previousFingerprint, bobA.fingerprint);
-    expect(events.last.currentFingerprint, bobB.fingerprint);
-  });
+      expect(result.kind, TrustObservationKind.keyChanged);
+      expect(result.contact.currentFingerprint, bobA.fingerprint);
+      expect(result.contact.identityId, bobA.identityId);
+      expect(result.contact.verificationStatus, KeyVerificationStatus.changed);
+      final keys = await store.listKnownKeys(contact.id);
+      expect(keys, hasLength(2));
+      final candidate = keys.singleWhere(
+        (key) => key.publicIdentity.fingerprint == bobB.fingerprint,
+      );
+      expect(candidate.verificationStatus, KeyVerificationStatus.changed);
+      expect(candidate.previousFingerprint, bobA.fingerprint);
+      final events = await store.listSecurityEvents(contactId: contact.id);
+      expect(events.last.type, SecurityEventType.keyChanged);
+      expect(events.last.previousFingerprint, bobA.fingerprint);
+      expect(events.last.currentFingerprint, bobB.fingerprint);
+    },
+  );
 
-  test('QR verification promotes an observed changed key and keeps history', () async {
-    final contact = await _contactWithPinnedBob(service, bobA.publicIdentity);
-    await service.verifyFromQr(
-      contactId: contact.id,
-      qrPayload: const KeyVerificationQrCodec().encode(bobA.publicIdentity),
-    );
-    await service.observeIdentity(
-      contactId: contact.id,
-      announcedIdentity: bobB.publicIdentity,
-    );
+  test(
+    'QR verification promotes an observed changed key and keeps history',
+    () async {
+      final contact = await _contactWithPinnedBob(service, bobA.publicIdentity);
+      await service.verifyFromQr(
+        contactId: contact.id,
+        qrPayload: const KeyVerificationQrCodec().encode(bobA.publicIdentity),
+      );
+      await service.observeIdentity(
+        contactId: contact.id,
+        announcedIdentity: bobB.publicIdentity,
+      );
 
-    final verified = await service.verifyFromQr(
-      contactId: contact.id,
-      qrPayload: const KeyVerificationQrCodec().encode(bobB.publicIdentity),
-      verifiedAt: DateTime.utc(2026, 3, 1),
-    );
+      final verified = await service.verifyFromQr(
+        contactId: contact.id,
+        qrPayload: const KeyVerificationQrCodec().encode(bobB.publicIdentity),
+        verifiedAt: DateTime.utc(2026, 3, 1),
+      );
 
-    expect(verified.currentFingerprint, bobB.fingerprint);
-    expect(verified.identityId, bobB.identityId);
-    expect(verified.verificationStatus, KeyVerificationStatus.verified);
-    final oldKey = await store.findKnownKey(contact.id, bobA.fingerprint);
-    final newKey = await store.findKnownKey(contact.id, bobB.fingerprint);
-    expect(oldKey?.verificationStatus, KeyVerificationStatus.revoked);
-    expect(oldKey?.revokedAt, DateTime.utc(2026, 3, 1));
-    expect(newKey?.verificationStatus, KeyVerificationStatus.verified);
-  });
+      expect(verified.currentFingerprint, bobB.fingerprint);
+      expect(verified.identityId, bobB.identityId);
+      expect(verified.verificationStatus, KeyVerificationStatus.verified);
+      final oldKey = await store.findKnownKey(contact.id, bobA.fingerprint);
+      final newKey = await store.findKnownKey(contact.id, bobB.fingerprint);
+      expect(oldKey?.verificationStatus, KeyVerificationStatus.revoked);
+      expect(oldKey?.revokedAt, DateTime.utc(2026, 3, 1));
+      expect(newKey?.verificationStatus, KeyVerificationStatus.verified);
+    },
+  );
 
   test('QR for an unrelated identity cannot verify a contact', () async {
     final contact = await _contactWithPinnedBob(service, bobA.publicIdentity);
@@ -144,9 +156,9 @@ void main() {
       displayName: 'Bob',
       transportAddress: 'bob@example.test',
     );
-    final payload = jsonDecode(
-      const KeyVerificationQrCodec().encode(bobA.publicIdentity),
-    ) as Map<String, dynamic>;
+    final payload =
+        jsonDecode(const KeyVerificationQrCodec().encode(bobA.publicIdentity))
+            as Map<String, dynamic>;
     payload['fingerprint'] = mallory.fingerprint;
 
     await expectLater(
@@ -160,9 +172,9 @@ void main() {
   });
 
   test('QR parser rejects unexpected fields', () {
-    final payload = jsonDecode(
-      const KeyVerificationQrCodec().encode(bobA.publicIdentity),
-    ) as Map<String, dynamic>;
+    final payload =
+        jsonDecode(const KeyVerificationQrCodec().encode(bobA.publicIdentity))
+            as Map<String, dynamic>;
     payload['unexpected'] = true;
 
     expect(

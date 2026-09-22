@@ -4,32 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('domain layer does not import implementation layers or plugins', () {
-    _expectNoImports(
-      Directory('lib/domain'),
-      const <String>[
-        '/application/',
-        '/infrastructure/',
-        '/presentation/',
-        '/protocol/',
-        '/security/',
-        'package:flutter',
-        'package:sodium',
-        'package:flutter_secure_storage',
-      ],
-    );
+    _expectNoImports(Directory('lib/domain'), const <String>[
+      '/application/',
+      '/infrastructure/',
+      '/presentation/',
+      '/protocol/',
+      '/security/',
+      'package:flutter',
+      'package:sodium',
+      'package:flutter_secure_storage',
+    ]);
   });
 
   test('application layer does not import infrastructure or plugins', () {
-    _expectNoImports(
-      Directory('lib/application'),
-      const <String>[
-        '/infrastructure/',
-        '/presentation/',
-        'package:flutter',
-        'package:sodium',
-        'package:flutter_secure_storage',
-      ],
-    );
+    _expectNoImports(Directory('lib/application'), const <String>[
+      '/infrastructure/',
+      '/presentation/',
+      'package:flutter',
+      'package:sodium',
+      'package:flutter_secure_storage',
+    ]);
   });
 }
 

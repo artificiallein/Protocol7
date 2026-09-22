@@ -21,22 +21,21 @@ final class InMemoryTrustStore
   }
 
   @override
-  Future<KnownKey?> findKnownKey(
-    String contactId,
-    String fingerprint,
-  ) async => _knownKeys[contactId]?[fingerprint];
+  Future<KnownKey?> findKnownKey(String contactId, String fingerprint) async =>
+      _knownKeys[contactId]?[fingerprint];
 
   @override
   Future<List<KnownKey>> listKnownKeys(String contactId) async =>
       List<KnownKey>.unmodifiable(
-        (_knownKeys[contactId]?.values ?? const <KnownKey>[]).toList()
-          ..sort((left, right) => left.firstSeenAt.compareTo(right.firstSeenAt)),
+        (_knownKeys[contactId]?.values ?? const <KnownKey>[]).toList()..sort(
+          (left, right) => left.firstSeenAt.compareTo(right.firstSeenAt),
+        ),
       );
 
   @override
   Future<void> saveKnownKey(KnownKey knownKey) async {
-    (_knownKeys[knownKey.contactId] ??= <String, KnownKey>{})[
-            knownKey.publicIdentity.fingerprint] =
+    (_knownKeys[knownKey.contactId] ??=
+            <String, KnownKey>{})[knownKey.publicIdentity.fingerprint] =
         knownKey;
   }
 

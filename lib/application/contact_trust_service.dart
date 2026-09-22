@@ -129,7 +129,8 @@ final class ContactTrustService {
         'Known fingerprint does not match public key material.',
       );
     }
-    final candidate = existingCandidate?.copyWith(
+    final candidate =
+        existingCandidate?.copyWith(
           lastSeenAt: now,
           verificationStatus: KeyVerificationStatus.changed,
           clearRevokedAt: true,
@@ -277,7 +278,9 @@ final class ContactTrustService {
       cryptoVersion: identity.cryptoVersion,
     );
     if (expected != identity.fingerprint) {
-      throw const ContactTrustException('Public identity fingerprint mismatch.');
+      throw const ContactTrustException(
+        'Public identity fingerprint mismatch.',
+      );
     }
   }
 

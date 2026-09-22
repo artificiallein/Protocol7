@@ -6,9 +6,8 @@ import '../../domain/model/identity.dart';
 import '../../domain/model/transport_message.dart';
 import '../../domain/ports/message_transport.dart';
 
-typedef EnvelopeMutation = EncryptedEnvelope Function(
-  EncryptedEnvelope envelope,
-);
+typedef EnvelopeMutation =
+    EncryptedEnvelope Function(EncryptedEnvelope envelope);
 
 final class FakeTransportBehavior {
   const FakeTransportBehavior({
@@ -104,8 +103,7 @@ final class FakeMessageTransport implements MessageTransport {
 
   final FakeTransportNetwork _network;
   final String address;
-  final List<ReceivedTransportMessage> _inbox =
-      <ReceivedTransportMessage>[];
+  final List<ReceivedTransportMessage> _inbox = <ReceivedTransportMessage>[];
   final StreamController<ReceivedTransportMessage> _controller =
       StreamController<ReceivedTransportMessage>.broadcast(sync: true);
 
@@ -181,15 +179,14 @@ final class FakeMessageTransport implements MessageTransport {
   }
 }
 
-EncryptedEnvelope _cloneEnvelope(EncryptedEnvelope source) =>
-    EncryptedEnvelope(
-      protocolVersion: source.protocolVersion,
-      messageId: source.messageId,
-      senderPublicIdentity: _cloneIdentity(source.senderPublicIdentity),
-      cryptoMetadata: CryptoMetadata(suite: source.cryptoMetadata.suite),
-      ciphertext: source.ciphertext,
-      signature: source.signature,
-    );
+EncryptedEnvelope _cloneEnvelope(EncryptedEnvelope source) => EncryptedEnvelope(
+  protocolVersion: source.protocolVersion,
+  messageId: source.messageId,
+  senderPublicIdentity: _cloneIdentity(source.senderPublicIdentity),
+  cryptoMetadata: CryptoMetadata(suite: source.cryptoMetadata.suite),
+  ciphertext: source.ciphertext,
+  signature: source.signature,
+);
 
 PublicIdentity _cloneIdentity(PublicIdentity source) => PublicIdentity(
   identityId: source.identityId,

@@ -67,9 +67,7 @@ final class KeyVerificationQrCodec {
           ProtocolConstants.encryptionPublicKeyBytes,
         ),
         fingerprint: _string(decoded, 'fingerprint', 128),
-        createdAt: DateTime.parse(
-          _string(decoded, 'createdAt', 64),
-        ).toUtc(),
+        createdAt: DateTime.parse(_string(decoded, 'createdAt', 64)).toUtc(),
         cryptoVersion: ProtocolConstants.version,
       );
     } on QrPayloadException {
@@ -79,11 +77,7 @@ final class KeyVerificationQrCodec {
     }
   }
 
-  static String _string(
-    Map<String, dynamic> map,
-    String field,
-    int maxLength,
-  ) {
+  static String _string(Map<String, dynamic> map, String field, int maxLength) {
     final value = map[field];
     if (value is! String || value.isEmpty || value.length > maxLength) {
       throw QrPayloadException('Invalid QR field: $field.');
