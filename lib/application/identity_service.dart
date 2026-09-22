@@ -3,10 +3,7 @@ import '../domain/ports/crypto_service.dart';
 import '../domain/ports/secure_key_storage.dart';
 
 final class IdentityService {
-  IdentityService({
-    required this.cryptoService,
-    required this.keyStorage,
-  });
+  IdentityService({required this.cryptoService, required this.keyStorage});
 
   final CryptoService cryptoService;
   final SecureKeyStorage keyStorage;
