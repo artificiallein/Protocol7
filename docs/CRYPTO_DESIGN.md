@@ -1,23 +1,53 @@
-# Cryptographic design (draft; no implementation)
+# Cryptographic design (P7/1 experimental)
 
-## Decision status
+## Status and dependency decision
 
-**Unapproved for deployment.** Use established, reviewed library primitives and stable standard constructions; no custom algorithms, ratchets, key exchanges or random generators. Final library/version, cryptographic suite, domain separation, wire format, test vectors and independent security review are required before a CryptoService is implemented.
+Milestones 2 and 3 implement an **experimental, unaudited** P7/1 identity and encrypted-envelope path. It is not a production security claim.
 
-Flutter/Dart candidates for evaluation include [`cryptography`](https://pub.dev/packages/cryptography) with its platform integration and [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage) for OS backed secrets. Candidates must be checked for current maintenance and releases, advisory history, license, mobile and desktop behavior, tests, interoperability, side channel properties, secure random behavior and documentation. A mail library (candidate: [`enough_mail`](https://pub.dev/packages/enough_mail)) is a separate transport decision and must not perform content cryptography. No candidate is a dependency in Phase 1.
+The implementation pins [`sodium` 4.1.0+1](https://pub.dev/packages/sodium/versions/4.1.0%2B1), a Dart binding to libsodium 1.0.22, and uses only its high-level APIs. The binding supports Android, iOS, Linux, macOS, Windows and web and exposes protected native-memory keys on VM targets. Its package licensing is BSD-3-Clause/ISC. [`flutter_secure_storage` 11.2.0](https://pub.dev/packages/flutter_secure_storage/versions/11.2.0) (BSD-3-Clause) provides platform-backed at-rest storage. These exact direct versions are pinned so dependency changes require review.
 
-## Proposed identity and trust
+`cryptography` was evaluated but not selected for P7/1. The libsodium sealed-box API avoids defining our own X25519 + KDF + AEAD construction. Dependencies and transitive advisories still require continuous review.
 
-A random, stable `identityId` identifies the cryptographic identity independently of the email transport address. Proposed identity includes separate signing and recipient encryption public keys, corresponding private keys, a creation time and a crypto suite version. Private material is created on device and stored only in OS-backed secure storage, never in SQLite, preferences, logs, Git or mail. A human fingerprint must bind a canonical encoding of both public keys, identity ID and version with a documented cryptographic hash and explicit domain separation. Never treat an email address or a self-asserted key announcement as authentication.
+## Identity
 
-TOFU stores the first key as **unverified**. Changed keys produce `KEY_CHANGED`, retain key history and stop automatic trust. QR and manually compared fingerprints are planned out-of-band verification. A compromised initial announcement remains a residual risk until verification.
+Each identity has two independently generated libsodium key pairs:
 
-## Candidate message flow
+- Ed25519 signing public/secret keys;
+- Curve25519 `crypto_box` encryption public/secret keys.
 
-Sender serializes and signs the inner message plus context (version, sender identity, recipient identity, message ID and intended protocol domain), then encrypts the signed object using an authenticated recipient encryption scheme. Recipient checks outer bounds and version, decrypts, verifies the signature against the pinned sender key, validates bindings and inner fields, and atomically records replay state before display. Exact construction, nonce strategy, AEAD associated data, signing order, algorithms and error behavior must be reviewed and specified before code. The outer message ID needed for replay is an opaque random value and must be bound to the authenticated inner payload.
+`identityId` is 16 random bytes from `randombytes_buf`, encoded as unpadded base64url. It is independent of email. `cryptoVersion` is `1`; `createdAt` is UTC. The public identity contains both public keys and a fingerprint. A private `UserIdentity` redacts secret material from `toString()` and can overwrite its Dart byte arrays with `destroy()`; copies and runtime/OS behavior mean perfect zeroization cannot be promised.
 
-For attachments, encrypt bytes and original filename/MIME/size as a bounded, authenticated payload before SMTP. Streaming and memory limits need an explicit design. Do not infer forward secrecy or post compromise recovery from static identity keys. Do not implement a homemade ratchet.
+The fingerprint is a 16-byte unkeyed libsodium BLAKE2b (`crypto_generichash`) output over:
 
-## Review gate
+1. UTF-8 `Protocol 7 fingerprint` followed by NUL;
+2. crypto version as a four-byte unsigned big-endian integer;
+3. 32-byte Ed25519 public key;
+4. 32-byte Curve25519 public key.
 
-Before milestone 3: choose exact maintained library versions and licenses; inspect release/advisory history and platform implementation; specify key formats and encrypted storage semantics; publish interoperable vectors and negative tests; review authenticated recipient/sender binding, replay persistence, downgrade resistance, parsing limits, and secret zeroization limits in Dart. Only then implement or claim encryption.
+It is rendered as eight groups of four uppercase hexadecimal characters. Fingerprints authenticate nothing until compared over an independent trusted channel. TOFU and contact verification remain Milestone 4.
+
+## Private-key storage
+
+`FlutterSecureKeyStorage` stores identity fields under an application-specific namespace using `flutter_secure_storage`. Signing and encryption secret keys are separate base64url values, not JSON and never part of the general database. A completion marker is deleted first and written last; partial writes are removed on failure. Load validates the fingerprint and proves that each private key matches its stored public key before returning the identity.
+
+Platform protections differ: Keychain on Apple platforms; Keystore-backed RSA-OAEP/AES-GCM storage by default on Android; platform mechanisms on desktop; and HTTPS-only web storage. Browser memory cannot receive libsodium native-memory protections. Production platform manifests, backup policy, access-control choices, device-lock behavior and physical-device integration tests remain release gates.
+
+## Signed sealed envelope
+
+P7/1 performs the required `serialize → sign → encrypt` order:
+
+1. The stable JSON message bytes are bounded to 64 KiB.
+2. Ed25519 signs a domain-separated binary input that binds the protocol version, suite, message ID, sender identity ID and both public keys, recipient identity ID, and plaintext bytes. Variable strings and plaintext use four-byte unsigned big-endian length prefixes.
+3. `crypto_box_seal` encrypts the plaintext to the recipient's Curve25519 public key. Libsodium generates and embeds the ephemeral public key and derives its nonce internally.
+4. The outer envelope carries the sealed ciphertext and detached signature. On receive, authenticated sealed-box open occurs first, then signature verification, matching the required decryption flow.
+
+Any changed clear envelope binding makes signature verification fail. `crypto_box_seal` rejects ciphertext modification. Unknown versions and suites, invalid key/ciphertext sizes and oversized data fail closed. The application must later compare the sender public identity against a pinned contact key before displaying a trusted state.
+
+## Limits and residual risks
+
+- A server sees the sender public identity, fingerprint, detached signature, message ID, suite, ciphertext length and all normal email metadata. It does not see message JSON.
+- Static recipient-key compromise can decrypt previously recorded sealed boxes; P7/1 does not claim forward secrecy or post-compromise security.
+- Replay persistence is not part of Milestone 3. A random, signed message ID is present for the later atomic replay index.
+- Attachments, streaming, backup/restore and key rotation are not implemented.
+- Web requires an explicitly bundled `sodium.js`, HTTPS secure storage and a separate security review. The current web build is only a compile check.
+- The protocol has no independent audit or interoperability vectors yet and must not be marketed as production-ready.

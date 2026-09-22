@@ -4,7 +4,7 @@ Protocol 7 — end-to-end encrypted messenger using ordinary email infrastructur
 
 **Encrypt locally. Transport anywhere. Decrypt locally.**
 
-> **Status: Phase 1 architecture scaffold.** This repository does not yet encrypt messages, send or receive email, manage keys, or provide a messenger UI. Do not use it for private communication.
+> **Status: experimental Milestones 2–3.** Local identity storage and an unaudited signed/encrypted-envelope path are implemented. Email transport, contact-key verification, replay persistence and messenger UI do not exist. Do not use it for private communication.
 
 ## Intended behavior
 
@@ -12,12 +12,13 @@ Protocol 7 will encrypt messages locally before SMTP, receive encrypted envelope
 
 Protocol 7 will **not** hide the fact of communication, sender or recipient email addresses, message times, traffic size, frequency, or the user's IP address from their email provider. It is not an anonymity system. An active provider can block or delay messages and can substitute an unverified public key. Users must verify fingerprints out of band before treating a contact as authenticated.
 
-## Phase 1
+## Implemented
 
-- Flutter/Dart application package: `protocol7`.
-- Architecture and security design drafts in [`docs/`](docs/).
-- Formatter, analyzer, widget test, and CI build checks.
-- No cryptography, SMTP, IMAP, credentials, attachments, or messenger screens yet.
+- Separate Ed25519 signing and Curve25519 encryption identities.
+- OS-backed private-key storage abstraction and adapter.
+- P7/1 message serialization, signed libsodium sealed boxes and strict envelope parsing.
+- Negative tests for wrong recipients, tampering, unsupported versions and parser limits.
+- No SMTP, IMAP, contact verification, replay persistence, attachments, or messenger screens yet.
 
 ## Development
 

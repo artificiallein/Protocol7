@@ -1,4 +1,4 @@
-# Architecture (Phase 1 draft)
+# Architecture
 
 ## Layers
 
@@ -14,7 +14,7 @@
 | `lib/infrastructure/mail/` | Email carrier, independent SMTP and IMAP adapters |
 | `lib/infrastructure/storage/` | OS-backed secret storage, local repositories and replay index |
 
-These directories are planned interfaces, not implemented modules. The current `lib/main.dart` is only a non-functional scaffold; `src/` and `tests/` are placeholders, with Dart code and tests in `lib/` and `test/`.
+The domain ports, identity application service, secure-storage adapter, P7/1 protocol codecs and libsodium crypto adapter are implemented. The current `lib/main.dart` remains a non-functional UI scaffold; `src/` and `tests/` are placeholders, with Dart code and tests in `lib/` and `test/`.
 
 ## Outbound boundary
 

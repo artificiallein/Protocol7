@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(const Protocol7App());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const Protocol7App());
+}
 
 /// A non-functional placeholder while the security architecture is designed.
 class Protocol7App extends StatelessWidget {
